@@ -93,20 +93,20 @@ npm install
 
 ## 🧪 Pruebas Realizadas
 
-✅ **Prueba 1: Wallet NO instalada**
-Comportamiento: muestra error “Freighter no está instalado”
+✅ **Prueba 1: Wallet NO instalada**  
+Comportamiento: muestra error “Freighter no está instalado”   
 **Resultado:** ✅ Implementado
 
-✅ **Prueba 2: Wallet instalada pero bloqueada**
-Comportamiento: Freighter pide desbloquear con password
+✅ **Prueba 2: Wallet instalada pero bloqueada**  
+Comportamiento: Freighter pide desbloquear con password  
 **Resultado:** ✅ Implementado
 
-✅ **Prueba 3: Conexión exitosa**
-Comportamiento: muestra dirección pública (empieza con G...)
+✅ **Prueba 3: Conexión exitosa**   
+Comportamiento: muestra dirección pública (empieza con G...)  
 **Resultado:** ✅ Implementado
-
-✅ **Prueba 4: Desconexión**
-Comportamiento: vuelve al estado inicial
+ 
+✅ **Prueba 4: Desconexión**  
+Comportamiento: vuelve al estado inicial  
 **Resultado:** ✅ Implementado
 
 ---
@@ -139,7 +139,7 @@ Interfaz inicial con botón de conexión.
 
 ### Estado Conectado
 
-📷 ![IMG2](public/screenshots/connected-state.png)``
+📷 ![IMG2](public/screenshots/connected-state.png)
 Vista mostrando la dirección pública.
 
 ### Proceso de Conexión
@@ -252,7 +252,7 @@ Esta aplicación está preparada para integrar:
 
 ## 👥 Autor
 
-**Tiburonas Builders**
+**Bev Tiburona Builders**💜
 TAREA 4: *Assets Nativos en Stellar*
 
 
