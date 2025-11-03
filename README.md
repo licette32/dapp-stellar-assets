@@ -1,14 +1,7 @@
-Perfecto 🦈💪
-Aquí tienes tu archivo completo `README.md` listo para pegar directamente en la raíz del proyecto (`/dapp-stellar-assets/`):
-
----
-
-```markdown
 # 🦈 DApp Stellar Assets - Conexión con Freighter Wallet
 
 ## 📋 Descripción del Proyecto
 Esta es una aplicación **Next.js** que permite conectar y desconectar la **wallet Freighter**, mostrando la dirección pública del usuario en **Stellar Testnet**.  
-La aplicación cuenta con una **interfaz moderna y responsive**, con **efectos visuales atractivos** y diseño tipo *glassmorphism*.
 
 ---
 
@@ -118,25 +111,6 @@ Comportamiento: vuelve al estado inicial
 
 ---
 
-## 🎨 Diseño y Estilos
-
-### 🎨 Paleta de Colores
-
-| Elemento        | Color                | Descripción          |
-| --------------- | -------------------- | -------------------- |
-| Fondo principal | `#082D36`            | Azul oscuro          |
-| Acentos         | `#86DDE4`, `#197074` | Cian / Verde azulado |
-| Énfasis         | `#C43556`, `#F9CCCB` | Coral / Rosa claro   |
-
-### ✨ Efectos Visuales
-
-* Gradientes animados en fondos
-* Efectos *glassmorphism* con `backdrop-blur`
-* Sombras suaves y bordes con opacidad
-* Transiciones suaves en hover
-
----
-
 ## 🚀 Ejecución del Proyecto
 
 ### Modo Desarrollo
@@ -160,17 +134,17 @@ npm start
 
 ### Estado Inicial - No Conectado
 
-📷 `public/screenshots/initial-state.png`
+📷 ![IMG1](public/screenshots/initial-state.png)
 Interfaz inicial con botón de conexión.
 
 ### Estado Conectado
 
-📷 `public/screenshots/connected-state.png`
+📷 ![IMG2](public/screenshots/connected-state.png)``
 Vista mostrando la dirección pública.
 
 ### Proceso de Conexión
 
-📷 `public/screenshots/connecting-state.png`
+📷 ![IMG3](public/screenshots/connecting-state.png)
 Animación de carga y conexión.
 
 ### Manejo de Errores
@@ -228,13 +202,13 @@ Status: Online
 
 ## 🎓 Lo que Aprendí
 
-✅ Verificar si Freighter está instalado (`isConnected()`)
-✅ Obtener la clave pública del usuario (`getAddress()`)
-✅ Manejar estados de conexión con `useState` y `useEffect`
-✅ Implementar manejo de errores claro
-✅ Diseñar interfaces modernas con Tailwind CSS
-✅ Usar TypeScript para tipado seguro
-✅ Aplicar efectos visuales avanzados (gradientes, blur, animaciones)
+✅ Verificar si Freighter está instalado (`isConnected()`)  
+✅ Obtener la clave pública del usuario (`getAddress()`)  
+✅ Manejar estados de conexión con `useState` y `useEffect`  
+✅ Implementar manejo de errores claro  
+✅ Diseñar interfaces modernas con Tailwind CSS  
+✅ Usar TypeScript para tipado seguro  
+✅ Aplicar efectos visuales avanzados (gradientes, blur, animaciones)  
 
 ---
 
@@ -246,6 +220,25 @@ Esta aplicación está preparada para integrar:
 * Consulta de **balances de assets nativos**
 * Envío de **transacciones en Stellar**
 * Integración con **Supabase** para persistencia de datos
+
+---
+
+## 🎨 Diseño y Estilos
+
+### 🎨 Paleta de Colores
+
+| Elemento        | Color                | Descripción          |
+| --------------- | -------------------- | -------------------- |
+| Fondo principal | `#082D36`            | Azul oscuro          |
+| Acentos         | `#86DDE4`, `#197074` | Cian / Verde azulado |
+| Énfasis         | `#C43556`, `#F9CCCB` | Coral / Rosa claro   |
+
+### ✨ Efectos Visuales
+
+* Gradientes animados en fondos
+* Efectos *glassmorphism* con `backdrop-blur`
+* Sombras suaves y bordes con opacidad
+* Transiciones suaves en hover
 
 ---
 
@@ -262,5 +255,4 @@ Esta aplicación está preparada para integrar:
 **Tiburonas Builders**
 TAREA 4: *Assets Nativos en Stellar*
 
-```
 
