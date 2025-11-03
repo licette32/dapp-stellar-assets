@@ -28,8 +28,6 @@ import Spinner from './Spinner';
  * Props:
  * - asset: Objeto { code, issuer } del asset
  * - onSuccess: Callback cuando trustline se crea exitosamente
- * 
- * MEJORA: Ahora valida si la trustline ya existe antes de crearla
  */
 export default function CreateTrustline({ asset, onSuccess }) {
   // Estado para mostrar loading
@@ -40,6 +38,9 @@ export default function CreateTrustline({ asset, onSuccess }) {
   
   // Estado para saber si la trustline ya existe
   const [trustlineExists, setTrustlineExists] = useState(false);
+  
+  // Estado para guardar el hash de la transacción
+  const [txHash, setTxHash] = useState('');
 
   /**
    * Función para verificar si la trustline ya existe
@@ -53,7 +54,9 @@ export default function CreateTrustline({ asset, onSuccess }) {
       
       // Buscar si ya existe el asset en los balances
       const existsOnChain = account.balances.some(
-        b => b.asset_code === asset.code && b.asset_issuer === asset.issuer
+        b => b.asset_code === asset.code && 
+             b.asset_issuer === asset.issuer &&
+             b.asset_type !== 'native'  // ← Importante
       );
       
       if (existsOnChain) {
@@ -61,13 +64,13 @@ export default function CreateTrustline({ asset, onSuccess }) {
       }
       
       // Si no existe en blockchain, verificar en Supabase
-      // (por si hubo un error anterior y quedó registrado)
       const { data, error } = await supabase
         .from('trustlines')
         .select('*')
         .eq('user_id', publicKey)
         .eq('asset_code', asset.code)
         .eq('asset_issuer', asset.issuer)
+        .eq('status', 'active')
         .limit(1);
       
       if (error) {
@@ -93,6 +96,7 @@ export default function CreateTrustline({ asset, onSuccess }) {
   const createTrustline = async () => {
     setLoading(true);
     setStatus({ type: '', message: '' });
+    setTxHash('');
 
     try {
       // ========== PASO 1: OBTENER PUBLIC KEY ==========
@@ -103,7 +107,6 @@ export default function CreateTrustline({ asset, onSuccess }) {
       }
 
       // ========== PASO 1.5: VERIFICAR SI YA EXISTE ==========
-      // MEJORA: Evitar crear trustlines duplicadas
       const { exists, source } = await checkExistingTrustline(publicKey);
       
       if (exists) {
@@ -113,7 +116,7 @@ export default function CreateTrustline({ asset, onSuccess }) {
           message: `⚠️ Ya tienes una trustline para ${asset.code}. No necesitas crear otra.`
         });
         setLoading(false);
-        return; // Salir sin crear
+        return;
       }
 
       // ========== PASO 2: CONECTAR A STELLAR ==========
@@ -123,7 +126,6 @@ export default function CreateTrustline({ asset, onSuccess }) {
       const account = await server.loadAccount(publicKey);
 
       // ========== PASO 3: DEFINIR EL ASSET ==========
-      // Crear objeto Asset desde las props
       const stellarAsset = new Asset(asset.code, asset.issuer);
 
       // ========== PASO 4: CONSTRUIR LA TRANSACCIÓN ==========
@@ -132,7 +134,10 @@ export default function CreateTrustline({ asset, onSuccess }) {
         fee: '100',
         
         // Network: TESTNET (MUY IMPORTANTE)
+        // ⚠️ CRÍTICO: Network passphrase correcto
         networkPassphrase: Networks.TESTNET
+        // Networks.TESTNET = "Test SDF Network ; September 2015"
+        // Networks.PUBLIC  = "Public Global Stellar Network ; September 2015"
       })
         // Agregar la operación ChangeTrust
         .addOperation(
@@ -166,8 +171,10 @@ export default function CreateTrustline({ asset, onSuccess }) {
       // Enviar a la red (3-5 segundos)
       const result = await server.submitTransaction(signedTransaction);
 
+      // Guardar hash de la transacción
+      setTxHash(result.hash);
+
       // ========== PASO 7: GUARDAR EN SUPABASE ==========
-      // Guardar metadata en nuestra base de datos
       const { error: dbError } = await supabase
         .from('trustlines')
         .insert({
@@ -175,7 +182,8 @@ export default function CreateTrustline({ asset, onSuccess }) {
           asset_code: asset.code,
           asset_issuer: asset.issuer,
           trust_limit: 10000,
-          tx_hash: result.hash  // Hash de blockchain
+          tx_hash: result.hash,
+          status: 'active'
         });
 
       if (dbError) {
@@ -189,7 +197,7 @@ export default function CreateTrustline({ asset, onSuccess }) {
         message: `✅ Trustline creada exitosamente! Ahora puedes recibir ${asset.code}.`
       });
       
-      setTrustlineExists(true); // Marcar que ya existe
+      setTrustlineExists(true);
       
       // Llamar callback si existe
       if (onSuccess) {
@@ -200,21 +208,32 @@ export default function CreateTrustline({ asset, onSuccess }) {
       // ========== MANEJO DE ERRORES ==========
       console.error('Error creating trustline:', err);
       
-      // Diferentes tipos de errores
       let errorMessage = 'Error desconocido';
       
       if (err.message.includes('User declined')) {
         errorMessage = 'Rechazaste la transacción en Freighter';
       } else if (err.response && err.response.data) {
-        // Errores de Stellar
         const resultCode = err.response.data.extras?.result_codes?.operations?.[0];
         
-        if (resultCode === 'op_low_reserve') {
-          errorMessage = 'Balance insuficiente. Necesitas al menos 0.5 XLM más.';
-        } else if (resultCode === 'op_line_full') {
-          errorMessage = 'Ya tienes la trustline creada.';
-        } else {
-          errorMessage = `Error de Stellar: ${resultCode || 'Desconocido'}`;
+        switch (resultCode) {
+          case 'op_low_reserve':
+            errorMessage = 'Balance insuficiente. Necesitas al menos 0.5 XLM más para la trustline.';
+            break;
+          case 'op_line_full':
+            errorMessage = 'Ya tienes esta trustline creada.';
+            setTrustlineExists(true);
+            break;
+          case 'op_no_issuer':
+            errorMessage = 'El issuer no existe o es inválido. Verifica el issuer en stellar.expert';
+            break;
+          case 'op_no_trust':
+            errorMessage = 'No tienes trustline para este asset. Créala primero.';
+            break;
+          case 'op_underfunded':
+            errorMessage = 'Fondos insuficientes para pagar la comisión (fee).';
+            break;
+          default:
+            errorMessage = `Error de Stellar: ${resultCode || 'Desconocido'}`;
         }
       } else {
         errorMessage = err.message;
@@ -260,6 +279,18 @@ export default function CreateTrustline({ asset, onSuccess }) {
             : 'bg-red-100 border border-red-400 text-red-800'
         }`}>
           <p className="text-sm">{status.message}</p>
+          
+          {/* 🌟 MEJORA DE ORO #1: Link a Stellar Expert */}
+          {status.type === 'success' && txHash && (
+            <a
+              href={`https://stellar.expert/explorer/testnet/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline text-xs mt-2 inline-block"
+            >
+              🔍 Ver transacción en Stellar Expert
+            </a>
+          )}
         </div>
       )}
       

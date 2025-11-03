@@ -18,9 +18,6 @@ import Spinner from './Spinner';
  * Props:
  * - publicKey: Public key del usuario
  * - asset: Objeto con { code, issuer } del asset a consultar
- * 
- * MEJORA: Ahora recibe un objeto Asset completo en vez de props separadas
- * Esto hace el componente más flexible y reutilizable
  */
 export default function AssetBalance({ publicKey, asset }) {
   // Estado para guardar el balance
@@ -47,7 +44,6 @@ export default function AssetBalance({ publicKey, asset }) {
 
     try {
       // Crear conexión al servidor de Stellar (testnet)
-      // Usando constante centralizada en vez de hardcodear URL
       const server = new Server(HORIZON_URLS.testnet);
       
       // Cargar la cuenta desde la red
@@ -62,11 +58,12 @@ export default function AssetBalance({ publicKey, asset }) {
       //   { asset_code: 'EURC', asset_issuer: 'GBBD47...', balance: '25.0000000' }
       // ]
       
+      // ⚠️ CORRECCIÓN CRÍTICA: Excluir native (XLM)
       // Buscar el asset específico que queremos
-      // IMPORTANTE: Comparamos AMBOS (código Y issuer)
       const assetBalance = account.balances.find(b => 
         b.asset_code === asset.code && 
-        b.asset_issuer === asset.issuer
+        b.asset_issuer === asset.issuer &&
+        b.asset_type !== 'native'  // ← NUNCA olvidar esto
       );
       
       // Si encontramos el balance, guardarlo
@@ -106,10 +103,18 @@ export default function AssetBalance({ publicKey, asset }) {
         💰 Balance de {asset.code}
       </h2>
       
-      {/* Mostrar issuer (primeros 8 caracteres para no saturar) */}
-      <p className="text-sm text-gray-500 mb-4">
-        Issuer: {asset.issuer.slice(0, 8)}...
-      </p>
+      {/* 🌟 MEJORA DE ORO #2: Mostrar issuer con tooltip */}
+      <div className="mb-4 relative group">
+        <p className="text-sm text-gray-500">
+          Issuer: <span className="font-mono text-xs">{asset.issuer.slice(0, 8)}...</span>
+        </p>
+        {/* Tooltip con información completa */}
+        <div className="hidden group-hover:block absolute z-10 bg-black text-white text-xs p-2 rounded mt-1 max-w-xs break-all">
+          {asset.code} Testnet - Circle (Oficial)
+          <br />
+          <span className="text-gray-300">{asset.issuer}</span>
+        </div>
+      </div>
       
       {/* Mostrar error si existe */}
       {error && (
